@@ -26,3 +26,4 @@ coverage/
 # Temporary / build files
 tmp/
 temp/
+*.traineddata
