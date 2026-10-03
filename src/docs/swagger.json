@@ -1,0 +1,143 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "AI-Powered Appointment Scheduler Assistant API",
+    "version": "1.0.0",
+    "description": "Production-ready backend service that parses natural language and document-based appointment requests into structured scheduling data with deterministic normalization and ambiguity guardrails."
+  },
+  "servers": [
+    {
+      "url": "/",
+      "description": "Current Server"
+    }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "Health check",
+        "description": "Returns status of the server",
+        "responses": {
+          "200": {
+            "description": "Server is operational",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "ok"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/appointments/parse": {
+      "post": {
+        "summary": "Parse appointment from text or image",
+        "description": "Processes a typed natural language request OR an uploaded image containing appointment notes/emails. Returns normalized appointment JSON or clarification guardrail response.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["text"],
+                "properties": {
+                  "text": {
+                    "type": "string",
+                    "example": "Book dentist next Friday at 3pm"
+                  }
+                }
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "image": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Image file (JPEG, PNG, WEBP) containing appointment notes"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Appointment successfully parsed and scheduled",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "appointment": {
+                      "type": "object",
+                      "properties": {
+                        "department": { "type": "string", "example": "Dentistry" },
+                        "date": { "type": "string", "example": "2026-10-09" },
+                        "time": { "type": "string", "example": "15:00" },
+                        "tz": { "type": "string", "example": "Asia/Kolkata" }
+                      }
+                    },
+                    "status": { "type": "string", "example": "ok" }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Clarification needed due to missing or ambiguous information",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "needs_clarification" },
+                    "message": { "type": "string", "example": "Please provide a specific appointment time." }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request (invalid input, empty text, or unsupported file)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "error" },
+                    "code": { "type": "string", "example": "INVALID_REQUEST" },
+                    "message": { "type": "string", "example": "Provide either text or an image." }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "error" },
+                    "code": { "type": "string", "example": "EXTRACTION_FAILED" },
+                    "message": { "type": "string", "example": "Unable to reliably extract appointment details." }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
