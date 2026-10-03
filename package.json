@@ -1,0 +1,52 @@
+{
+  "name": "appointment-scheduler-ai",
+  "version": "1.0.0",
+  "description": "AI-Powered Appointment Scheduler Assistant with OCR, LLM Entity Extraction, Deterministic Normalization, and Guardrails",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "test": "jest --runInBand --detectOpenHandles --forceExit"
+  },
+  "keywords": [
+    "appointment",
+    "scheduler",
+    "ocr",
+    "llm",
+    "guardrails",
+    "express",
+    "tesseract"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@google/generative-ai": "^0.24.0",
+    "@tesseract.js-data/eng": "^1.0.0",
+    "chrono-node": "^2.7.7",
+    "cors": "^2.8.5",
+    "date-fns": "^4.1.0",
+    "date-fns-tz": "^3.2.0",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "helmet": "^8.0.0",
+    "multer": "^1.4.5-lts.1",
+    "pino": "^9.6.0",
+    "pino-http": "^10.4.0",
+    "sharp": "^0.33.5",
+    "swagger-ui-express": "^5.0.1",
+    "tesseract.js": "^5.1.1",
+    "yamljs": "^0.3.0",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "nodemon": "^3.1.9",
+    "pino-pretty": "^13.0.0",
+    "supertest": "^7.0.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "verbose": true,
+    "testTimeout": 30000
+  }
+}
