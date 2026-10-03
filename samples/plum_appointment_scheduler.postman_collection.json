@@ -1,0 +1,123 @@
+{
+  "info": {
+    "_postman_id": "c76a9134-4b51-4fa3-92f7-5d2dbf1a94b1",
+    "name": "Plum Appointment Scheduler API",
+    "description": "Collection of requests for testing the AI-Powered Appointment Scheduler backend.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/health",
+          "host": ["{{baseUrl}}"],
+          "path": ["health"]
+        }
+      }
+    },
+    {
+      "name": "Parse Appointment - Valid Text",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"text\": \"Book dentist next Friday at 3pm\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/appointments/parse",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "v1", "appointments", "parse"]
+        }
+      }
+    },
+    {
+      "name": "Parse Appointment - Valid Image Upload",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "image",
+              "type": "file",
+              "src": "samples/valid/appointment_note.png"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/appointments/parse",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "v1", "appointments", "parse"]
+        }
+      }
+    },
+    {
+      "name": "Parse Appointment - Missing Time (Clarification)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"text\": \"Book dentist next Friday\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/appointments/parse",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "v1", "appointments", "parse"]
+        }
+      }
+    },
+    {
+      "name": "Parse Appointment - Ambiguous Date (Clarification)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"text\": \"Book dentist sometime next week\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/appointments/parse",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "v1", "appointments", "parse"]
+        }
+      }
+    },
+    {
+      "name": "Parse Appointment - Greeting / Noise (Clarification)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"text\": \"hello how are you\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/appointments/parse",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "v1", "appointments", "parse"]
+        }
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    }
+  ]
+}
