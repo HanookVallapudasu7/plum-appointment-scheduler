@@ -1,4 +1,5 @@
 const { GoogleGenerativeAI, SchemaType } = require('@google/generative-ai');
+const chrono = require('chrono-node');
 const config = require('../config/env');
 const logger = require('../utils/logger');
 const { extractionSchema } = require('../schemas/extraction.schema');
@@ -122,14 +123,14 @@ class LlmService {
     // Extract department
     let department = null;
     const deptKeywords = [
-      'dentist', 'dentistry', 'dental', 'teeth', 'tooth',
-      'doctor', 'general doctor', 'general physician', 'physician',
+      'dentist', 'dentistry', 'dental', 'teeth', 'tooth', 'orthodontist',
       'cardiologist', 'cardiology', 'heart',
       'dermatologist', 'dermatology', 'skin',
-      'ophthalmologist', 'ophthalmology', 'eye', 'eye doctor',
+      'ophthalmologist', 'ophthalmology', 'eye', 'eye doctor', 'optometrist',
       'orthopedist', 'orthopedics', 'bone',
       'pediatrician', 'pediatrics',
-      'ent'
+      'ent',
+      'doctor', 'general doctor', 'general physician', 'physician', 'gp'
     ];
 
     for (const kw of deptKeywords) {
@@ -140,34 +141,53 @@ class LlmService {
       }
     }
 
-    // Extract time phrase (handles "3pm", "3:30 pm", "@ 3 pm", "at 4:30 PM", "morning", "afternoon")
-    let timePhrase = null;
-    const timeRegex = /(?:at|@)?\s*(\d{1,2}(?::\d{2})?\s*(?:am|pm)?|\b(?:morning|afternoon|evening|night)\b)/i;
-    const timeMatch = lower.match(timeRegex);
-    if (timeMatch && timeMatch[1]) {
-      const candidate = timeMatch[1].trim();
-      // Ensure it's not a standalone small number that was part of a date
-      if (/\d/.test(candidate) || ['morning', 'afternoon', 'evening', 'night'].includes(candidate)) {
-        timePhrase = candidate;
-      }
-    }
-
-    // Extract date phrase (handles "next Friday", "nxt Friday", "tomorrow", "today", "sometime next week", "next week", "Friday")
     let datePhrase = null;
+    let timePhrase = null;
+
+    // Check explicitly ambiguous date phrases
     if (lower.includes('sometime next week')) {
       datePhrase = 'sometime next week';
     } else if (lower.includes('next week')) {
       datePhrase = 'next week';
-    } else if (lower.includes('tomorrow')) {
-      datePhrase = 'tomorrow';
-    } else if (lower.includes('today')) {
-      datePhrase = 'today';
-    } else {
-      // Look for weekdays with optional "next" or "nxt"
-      const dayMatch = lower.match(/\b(next|nxt)?\s*(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/i);
-      if (dayMatch) {
-        const prefix = dayMatch[1] ? (dayMatch[1].toLowerCase() === 'nxt' ? 'next' : dayMatch[1]) : '';
-        datePhrase = `${prefix ? prefix + ' ' : ''}${dayMatch[2]}`.trim();
+    }
+
+    // Check vague time periods
+    const vagueTimes = ['morning', 'afternoon', 'evening', 'night'];
+    for (const vt of vagueTimes) {
+      if (new RegExp(`\\b${vt}\\b`, 'i').test(lower)) {
+        timePhrase = vt;
+        break;
+      }
+    }
+
+    // Check explicit time expressions (e.g. "at 3pm", "3:30 pm", "@ 3 pm", "15:00")
+    const explicitTimeMatch = lower.match(/(?:at|@)?\s*(\d{1,2}(?::\d{2})?\s*(?:am|pm)|\b\d{1,2}:\d{2}\b)/i);
+    if (explicitTimeMatch) {
+      timePhrase = explicitTimeMatch[1].trim();
+    }
+
+    // Use Chrono parser to recognize calendar dates and times
+    const parsed = chrono.parse(text);
+    if (parsed.length > 0) {
+      const p = parsed[0];
+      if (!datePhrase) {
+        if (p.start.isCertain('day') || p.start.isCertain('weekday') || p.start.isCertain('month')) {
+          // Remove preposition and trailing time expressions from matched text
+          const cleanedDate = p.text
+            .replace(/(?:at|@)\s*\d{1,2}(?::\d{2})?\s*(?:am|pm)?/i, '')
+            .replace(/^(on|at|in)\s+/i, '')
+            .trim();
+          datePhrase = cleanedDate || p.text;
+        }
+      }
+
+      if (!timePhrase && p.start.isCertain('hour')) {
+        const h = p.start.get('hour');
+        const m = p.start.get('minute') || 0;
+        const meridiem = p.start.get('meridiem') === 1 ? 'pm' : (p.start.get('meridiem') === 0 ? 'am' : '');
+        timePhrase = meridiem
+          ? `${h % 12 || 12}${m ? `:${String(m).padStart(2, '0')}` : ''}${meridiem}`
+          : `${h}:${String(m).padStart(2, '0')}`;
       }
     }
 
