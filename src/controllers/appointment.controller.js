@@ -45,9 +45,11 @@ class AppointmentController {
       }
 
       // Execute parsing pipeline
+      const isDebug = req.query.debug === 'true' || req.query.detailed === 'true';
       const result = await appointmentService.processAppointment({
         text: hasText ? req.body.text : undefined,
-        imageBuffer: hasImage ? req.file.buffer : undefined
+        imageBuffer: hasImage ? req.file.buffer : undefined,
+        includeDebug: isDebug
       });
 
       if (result.isClarification) {

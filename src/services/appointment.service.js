@@ -23,7 +23,7 @@ class AppointmentService {
    * @param {Date} [input.referenceDate] - Optional reference date for testing
    * @returns {Promise<{ isClarification: boolean, data: Object }>}
    */
-  async processAppointment({ text, imageBuffer, referenceDate }) {
+  async processAppointment({ text, imageBuffer, referenceDate, includeDebug = false }) {
     const startTime = Date.now();
     let rawText = '';
     let ocrConfidence = 1.0;
@@ -91,8 +91,32 @@ class AppointmentService {
       };
     }
 
-    // Assemble final response payload
+    // Assemble final response payload (with optional intermediate pipeline steps for demo)
     const finalResponse = {
+      ...(includeDebug && {
+        pipeline_trace: {
+          step1_ocr: {
+            raw_text: rawText,
+            confidence: ocrConfidence
+          },
+          step2_entities: {
+            entities: {
+              date_phrase,
+              time_phrase,
+              department
+            },
+            entities_confidence: confidence
+          },
+          step3_normalized: {
+            normalized: {
+              date: normalizedDate,
+              time: normalizedTime,
+              tz: config.TIMEZONE
+            },
+            normalization_confidence: 0.90
+          }
+        }
+      }),
       appointment: {
         department: normalizedDept,
         date: normalizedDate,
